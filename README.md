@@ -1,7 +1,7 @@
 # MCP RethinkDB Server
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.23%2B-blue)](https://golang.org/)
+[![Go Version](https://img.shields.io/badge/Go-1.23%2B-blue)](https://golang.org/dl/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
 [![Docker Hub](https://img.shields.io/badge/Docker-finn13/mcp--rethinkdb--server-blue)](https://hub.docker.com/r/finn13/mcp-rethinkdb-server)
 
@@ -75,19 +75,6 @@ Environment variables:
 
 ## Usage
 
-### Run Directly
-
-```bash
-# Default connection (localhost:28015)
-./mcp-rethinkdb-server
-
-# Custom host/port
-RETHINKDB_HOST=myhost RETHINKDB_PORT=28015 ./mcp-rethinkdb-server
-
-# With authentication
-RETHINKDB_HOST=myhost RETHINKDB_USER=admin RETHINKDB_PASSWORD=secret ./mcp-rethinkdb-server
-```
-
 ### Claude Desktop Configuration
 
 Add to your Claude Desktop config:
@@ -96,7 +83,7 @@ Add to your Claude Desktop config:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
 **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-#### Using Docker Image:
+#### Using Docker Image (Recommended):
 ```json
 {
   "mcpServers": {
@@ -130,7 +117,20 @@ Add to your Claude Desktop config:
 }
 ```
 
-**Important**: Use the absolute path to your binary. After updating the config, restart Claude Desktop.
+**Important**: After updating the config, restart Claude Desktop completely.
+
+### Run Directly
+
+```bash
+# Default connection (localhost:28015)
+./mcp-rethinkdb-server
+
+# Custom host/port
+RETHINKDB_HOST=myhost RETHINKDB_PORT=28015 ./mcp-rethinkdb-server
+
+# With authentication
+RETHINKDB_HOST=myhost RETHINKDB_USER=admin RETHINKDB_PASSWORD=secret ./mcp-rethinkdb-server
+```
 
 ## Tool Examples
 
@@ -273,6 +273,30 @@ Future improvements and features under consideration:
 - [ ] **Connection Pooling**: Improved connection management
 - [ ] **TLS/SSL Support**: Secure connections to RethinkDB
 
+## Troubleshooting
+
+### Connection Issues
+
+**Problem**: Server can't connect to RethinkDB  
+**Solution**: 
+- Verify RethinkDB is running: `rethinkdb --version`
+- Check the host and port settings
+- Test connection manually
+
+### Claude Desktop Integration
+
+**Problem**: Server not showing up in Claude  
+**Solution**:
+- Verify the path/docker command in config is correct
+- Restart Claude Desktop completely
+- Check Claude logs: `~/Library/Logs/Claude/` (macOS)
+
+**Problem**: Permission denied when executing binary  
+**Solution**:
+```bash
+chmod +x /path/to/mcp-rethinkdb-server
+```
+
 ### Query Limitations
 
 **Problem**: Query returns fewer results than expected  
@@ -302,4 +326,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
 - [RethinkDB Documentation](https://rethinkdb.com/docs/)
 - [Docker Hub Image](https://hub.docker.com/r/finn13/mcp-rethinkdb-server)
-- [Report Issues](https://github.com/finn13/mcp-rethinkdb-server/issues)
+- [Report Issues](https://github.com/finnng/mcp-rethinkdb-server/issues)
