@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "mcp-rethinkdb-staging": {
+      "command": "docker",
+			"args": [
+				"run",
+				"-i",
+				"--rm",
+				"-e",
+				"RETHINKDB_HOST=x.x.x.x",
+				"-e",
+				"RETHINKDB_PORT=28015",
+				"finn13/mcp-rethinkdb-server:latest"
+			],
+			"env": {
+
+			}
+    }
+  }
+}
