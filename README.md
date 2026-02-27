@@ -5,16 +5,16 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
 [![Docker Hub](https://img.shields.io/badge/Docker-finn13/mcp--rethinkdb--server-blue)](https://hub.docker.com/r/finn13/mcp-rethinkdb-server)
 
-A Model Context Protocol (MCP) server that provides read-only access to RethinkDB databases. This server enables AI assistants like Claude to safely query and explore RethinkDB data without the risk of accidental modifications.
+A Model Context Protocol (MCP) server that provides access to RethinkDB databases. This server enables AI assistants like Claude to query, explore, and write RethinkDB data.
 
 ## Features
 
-- **Read-only operations**: Only allows data reading, no mutations - safe for AI assistants
-- **Four tools available**:
+- **Five tools available**:
   - `list_databases` - List all databases
   - `list_tables` - List tables in a database
   - `query_table` - Query data with filtering, ordering, and limits
   - `table_info` - Get table metadata (primary key, indexes, doc count)
+  - `write_data` - Insert, update, upsert, or delete documents
 - **Easy integration** with Claude Desktop and other MCP clients
 - **Secure connection** support with username/password authentication
 - **Docker support** - Pre-built image available on Docker Hub
@@ -79,8 +79,8 @@ Environment variables:
 
 Add to your Claude Desktop config:
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 #### Using Docker Image (Recommended):
@@ -231,11 +231,82 @@ Response:
 }
 ```
 
+### write_data
+
+Write data to a table. Supports `insert`, `update`, `upsert`, and `delete` operations. Data can be a single document or an array of documents.
+
+```json
+{
+  "name": "write_data",
+  "arguments": {
+    "database": "test",
+    "table": "users",
+    "operation": "insert",
+    "data": {"id": "abc123", "name": "Alice", "status": "active"}
+  }
+}
+```
+
+Response:
+```json
+{
+  "database": "test",
+  "table": "users",
+  "operation": "insert",
+  "inserted": 1,
+  "replaced": 0,
+  "unchanged": 0,
+  "deleted": 0,
+  "errors": 0
+}
+```
+
+**Parameters:**
+- `database` (required): Database name
+- `table` (required): Table name
+- `data` (required): A single document or array of documents. For `delete`, a document with only `id` deletes by primary key; any other fields are used as a filter to match multiple documents.
+- `operation` (optional): One of `insert` (default), `update`, `upsert`, `delete`
+
+**Operations:**
+| Operation | Behaviour |
+|-----------|-----------|
+| `insert` | Insert document(s); errors on duplicate key |
+| `update` | Insert with conflict strategy `update` — merges fields into existing documents |
+| `upsert` | Insert with conflict strategy `replace` — creates if missing, fully replaces if exists |
+| `delete` | Delete by primary key (when data has only `id`) or by filter (any other fields) |
+
 ## Development
 
-### Test with MCP Inspector
+### Project Structure
 
-The MCP Inspector provides a web-based interface to test your server:
+```
+mcp-rethinkdb-server/
+├── main.go                 # Entry point: config, connection, MCP wiring
+├── server/
+│   ├── server.go           # RethinkDBServer struct with all tool handlers
+│   └── server_test.go      # Integration tests (TDD)
+├── docker-compose.yml      # Test RethinkDB instance (port 28016)
+└── Dockerfile
+```
+
+### Running Tests
+
+Tests require a RethinkDB instance. Start one with Docker Compose:
+
+```bash
+docker compose up -d
+go test ./server/ -v
+```
+
+The test suite uses port `28016` by default to avoid conflicts with other running RethinkDB instances. Override with environment variables:
+
+```bash
+RETHINKDB_TEST_HOST=localhost RETHINKDB_TEST_PORT=28016 go test ./server/ -v
+```
+
+Tests automatically create and tear down a `mcp_test_db` database.
+
+### Test with MCP Inspector
 
 ```bash
 go build -o mcp-rethinkdb-server .
@@ -246,8 +317,6 @@ Open your browser to the URL shown (usually http://localhost:5173) to interact w
 
 ## Roadmap
 
-Future improvements and features under consideration:
-
 ### Advanced Query Support
 - [ ] **Joins**: Support for `eqJoin`, `innerJoin`, `outerJoin` operations
 - [ ] **Aggregations**: Add `group`, `ungroup`, `count`, `sum`, `avg`, `min`, `max` operations
@@ -256,6 +325,7 @@ Future improvements and features under consideration:
 - [ ] **Geospatial Queries**: Support for `getIntersecting` and geospatial indexes
 
 ### Additional Tools
+- [x] **Write Data**: Insert, update, upsert, and delete documents via the `write_data` tool
 - [ ] **Schema Inspector**: Tool to explore table schemas and relationships
 - [ ] **Index Management**: View and analyze index usage and performance
 - [ ] **Query Builder**: Interactive query construction with validation
@@ -277,21 +347,21 @@ Future improvements and features under consideration:
 
 ### Connection Issues
 
-**Problem**: Server can't connect to RethinkDB  
-**Solution**: 
+**Problem**: Server can't connect to RethinkDB
+**Solution**:
 - Verify RethinkDB is running: `rethinkdb --version`
 - Check the host and port settings
 - Test connection manually
 
 ### Claude Desktop Integration
 
-**Problem**: Server not showing up in Claude  
+**Problem**: Server not showing up in Claude
 **Solution**:
 - Verify the path/docker command in config is correct
 - Restart Claude Desktop completely
 - Check Claude logs: `~/Library/Logs/Claude/` (macOS)
 
-**Problem**: Permission denied when executing binary  
+**Problem**: Permission denied when executing binary
 **Solution**:
 ```bash
 chmod +x /path/to/mcp-rethinkdb-server
@@ -299,8 +369,8 @@ chmod +x /path/to/mcp-rethinkdb-server
 
 ### Query Limitations
 
-**Problem**: Query returns fewer results than expected  
-**Solution**: 
+**Problem**: Query returns fewer results than expected
+**Solution**:
 - Default limit is 100 documents
 - Maximum limit is 1000 documents
 - Use the `limit` parameter to adjust
@@ -311,11 +381,10 @@ Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Run tests: `go test ./...`
-5. Commit: `git commit -am 'Add feature'`
-6. Push: `git push origin feature-name`
-7. Create a Pull Request
+3. Make your changes with tests: `go test ./...`
+4. Commit: `git commit -am 'Add feature'`
+5. Push: `git push origin feature-name`
+6. Create a Pull Request
 
 ## License
 
