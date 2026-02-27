@@ -9,12 +9,16 @@ A Model Context Protocol (MCP) server that provides access to RethinkDB database
 
 ## Features
 
-- **Five tools available**:
+- **Nine tools available**:
   - `list_databases` - List all databases
   - `list_tables` - List tables in a database
-  - `query_table` - Query data with filtering, ordering, and limits
+  - `query_table` - Query data with filtering, ordering, limits, and execution time
   - `table_info` - Get table metadata (primary key, indexes, doc count)
   - `write_data` - Insert, update, upsert, or delete documents
+  - `aggregate` - count, sum, avg, min, max, and group aggregations
+  - `advanced_query` - eq_join, between, contains, and map operations
+  - `schema_inspector` - Infer field types and relationships from sampled documents
+  - `index_info` - View secondary index details and status
 - **Easy integration** with Claude Desktop and other MCP clients
 - **Secure connection** support with username/password authentication
 - **Docker support** - Pre-built image available on Docker Hub
@@ -118,6 +122,96 @@ Add to your Claude Desktop config:
 ```
 
 **Important**: After updating the config, restart Claude Desktop completely.
+
+### VS Code Configuration
+
+Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) extension (v1.99+), which includes MCP support.
+
+Add to your VS Code `settings.json` (`Cmd+Shift+P` → "Open User Settings JSON"):
+
+#### Using Docker Image (Recommended):
+```json
+{
+  "mcp": {
+    "servers": {
+      "rethinkdb": {
+        "command": "docker",
+        "args": [
+          "run",
+          "-i",
+          "--rm",
+          "-e",
+          "RETHINKDB_HOST=host.docker.internal",
+          "finn13/mcp-rethinkdb-server"
+        ]
+      }
+    }
+  }
+}
+```
+
+#### Using Local Binary:
+```json
+{
+  "mcp": {
+    "servers": {
+      "rethinkdb": {
+        "command": "/absolute/path/to/mcp-rethinkdb-server",
+        "env": {
+          "RETHINKDB_HOST": "localhost",
+          "RETHINKDB_PORT": "28015"
+        }
+      }
+    }
+  }
+}
+```
+
+**Important**: After updating settings, run `MCP: Restart Server` from the Command Palette.
+
+### Zed Editor Configuration
+
+Add to your Zed `settings.json` (`Cmd+,` or `~/.config/zed/settings.json`):
+
+#### Using Docker Image (Recommended):
+```json
+{
+  "context_servers": {
+    "rethinkdb": {
+      "command": {
+        "path": "docker",
+        "args": [
+          "run",
+          "-i",
+          "--rm",
+          "-e",
+          "RETHINKDB_HOST=10.20.1.10",
+          "finn13/mcp-rethinkdb-server"
+        ]
+      }
+    }
+  }
+}
+```
+
+#### Using Local Binary:
+```json
+{
+  "context_servers": {
+    "rethinkdb": {
+      "command": {
+        "path": "/absolute/path/to/mcp-rethinkdb-server",
+        "env": {
+          "RETHINKDB_HOST": "localhost",
+          "RETHINKDB_PORT": "28015"
+        }
+      }
+    }
+  }
+}
+```
+
+**Important**: After updating settings, restart Zed or run `agent: restart context server` from the Command Palette.
 
 ### Run Directly
 
@@ -305,6 +399,41 @@ RETHINKDB_TEST_HOST=localhost RETHINKDB_TEST_PORT=28016 go test ./server/ -v
 ```
 
 Tests automatically create and tear down a `mcp_test_db` database.
+
+### Publishing a New Docker Image
+
+> **Maintainer only** — requires push access to `finn13/mcp-rethinkdb-server` on Docker Hub.
+
+**1. Commit and tag the release:**
+```bash
+git add -A
+git commit -m "feat: describe your changes"
+git push origin master
+git tag v1.x.0
+git push origin v1.x.0
+```
+
+**2. Log in to Docker Hub:**
+```bash
+docker login -u finn13
+```
+
+**3. Build multi-arch image and push:**
+```bash
+docker buildx build \
+  --builder multiarch-builder \
+  --platform linux/amd64,linux/arm64 \
+  -t finn13/mcp-rethinkdb-server:1.x.0 \
+  -t finn13/mcp-rethinkdb-server:latest \
+  --push .
+```
+
+The `--push` flag builds both `amd64` and `arm64` layers and pushes them as a single multi-arch manifest. If `multiarch-builder` is not set up yet:
+
+```bash
+docker buildx create --name multiarch-builder --use
+docker buildx inspect --bootstrap
+```
 
 ### Test with MCP Inspector
 
