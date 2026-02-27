@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  rethinkdb-test:
+    image: rethinkdb:2.4.3
+    container_name: mcp-rethinkdb-test
+    ports:
+      - "28016:28015"
+      - "8081:8080"
+    volumes:
+      - rethinkdb-test-data:/data
+    command: rethinkdb --bind all
+
+volumes:
+  rethinkdb-test-data:
