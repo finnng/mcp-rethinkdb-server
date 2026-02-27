@@ -318,16 +318,16 @@ Open your browser to the URL shown (usually http://localhost:5173) to interact w
 ## Roadmap
 
 ### Advanced Query Support
-- [ ] **Joins**: Support for `eqJoin`, `innerJoin`, `outerJoin` operations
-- [ ] **Aggregations**: Add `group`, `ungroup`, `count`, `sum`, `avg`, `min`, `max` operations
-- [ ] **Map/Reduce**: Support for `map`, `concatMap`, `fold` for complex transformations
-- [ ] **Advanced Filtering**: Support for `between`, `contains`, nested field queries
+- [x] **Joins**: Support for `eqJoin` operations via the `advanced_query` tool
+- [x] **Aggregations**: `group`, `ungroup`, `count`, `sum`, `avg`, `min`, `max` via the `aggregate` tool
+- [x] **Map/Reduce**: Support for `map` (field plucking) via the `advanced_query` tool
+- [x] **Advanced Filtering**: Support for `between`, `contains` via the `advanced_query` tool
 - [ ] **Geospatial Queries**: Support for `getIntersecting` and geospatial indexes
 
 ### Additional Tools
 - [x] **Write Data**: Insert, update, upsert, and delete documents via the `write_data` tool
-- [ ] **Schema Inspector**: Tool to explore table schemas and relationships
-- [ ] **Index Management**: View and analyze index usage and performance
+- [x] **Schema Inspector**: Explore table schemas via the `schema_inspector` tool (samples documents, infers field types, reports primary key and indexes)
+- [x] **Index Management**: View index details via the `index_info` tool (ready status, multi, geo, outdated flags)
 - [ ] **Query Builder**: Interactive query construction with validation
 - [ ] **Changefeeds**: Real-time data monitoring (read-only subscriptions)
 
@@ -335,7 +335,7 @@ Open your browser to the URL shown (usually http://localhost:5173) to interact w
 - [ ] **Query Caching**: Cache frequently accessed queries
 - [ ] **Parallel Queries**: Support multiple simultaneous queries
 - [ ] **Result Streaming**: Stream large result sets efficiently
-- [ ] **Query Statistics**: Execution time and resource usage metrics
+- [x] **Query Statistics**: Execution time returned in `query_table` responses (`execution_time_ms`)
 
 ### Developer Experience
 - [ ] **Interactive Examples**: More comprehensive example queries
